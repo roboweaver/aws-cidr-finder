@@ -11,17 +11,27 @@
 set -e
 
 STACK=cidr-findr
+# Directory to find the Lambda in
+bucket=$1
 
-bucket="$1"
+# Profile to use
+profile=$2
+
+# Region
+region=us-east-1
 
 if [ -z $bucket ]; then
     read -p "S3 bucket to store template assets (e.g. mybucket): " bucket
 fi
 
+if [ -z $profile ]; then
+    read -p "Profile to use for account: " profile
+fi
+
 # Create the stack
 zip -9 -r cidr-findr.zip cidr_findr
-aws cloudformation package --template-file template.yaml --s3-bucket $bucket --output-template-file template.out.yaml >/dev/null
-aws cloudformation deploy --template-file template.out.yaml --stack-name $STACK --capabilities CAPABILITY_IAM
+aws cloudformation package --profile ${profile} --region ${region} --template-file template.yaml --s3-bucket $bucket --output-template-file template.out.yaml >/dev/null
+aws cloudformation deploy --profile ${profile} --region ${region} --template-file template.out.yaml --stack-name $STACK --capabilities CAPABILITY_IAM
 
 # Clean up
 rm template.out.yaml
