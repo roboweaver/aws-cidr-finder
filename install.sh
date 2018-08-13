@@ -11,21 +11,30 @@
 set -e
 
 STACK=cidr-findr
-# Directory to find the Lambda in
-bucket=$1
 
 # Profile to use
-profile=$2
+profile=$1
 
 # Region
-region=us-east-1
-
-if [ -z $bucket ]; then
-    read -p "S3 bucket to store template assets (e.g. mybucket): " bucket
-fi
+region=${2:-us-west-2}
 
 if [ -z $profile ]; then
     read -p "Profile to use for account: " profile
+fi
+
+bucket=${profile}-artifacts-${region}
+
+if aws s3 ls ${bucket} --profile ${profile} 2>&1 | grep -q 'NoSuchBucket'
+then
+	if aws s3api create-bucket --bucket ${bucket} --region ${region} --create-bucket-configuration LocationConstraint=${region} --profile ${profile}
+	then
+		aws s3api put-bucket-versioning --bucket ${bucket} --versioning-configuration Status=Enabled --profile ${profile} --region ${region}
+		echo "[CREATED] ${bucket}"			
+	else
+                returnCode=$?
+		echo "[FAILED TO CREATE] ${bucket}"
+                exit ${returnCode}
+	fi
 fi
 
 # Create the stack

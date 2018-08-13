@@ -9,9 +9,10 @@ or in the "license" file accompanying this file. This file is distributed on an 
 """
 
 
-from . import CidrFindr, CidrFindrException
+from .cidr_findr import CidrFindr, CidrFindrException
 from .lambda_utils import parse_size, send_response, sizes_valid
 import boto3
+import json
 
 ec2 = boto3.client("ec2")
 
@@ -19,7 +20,8 @@ def handler(event, context, responder=send_response, client=ec2):
     """
     Handle a CloudFormation custom resource event
     """
-
+    print("Received event: " + json.dumps(event, indent=2))
+    
     # Always return success on Delete events
     if event["RequestType"] == "Delete":
         return responder(event, context, "SUCCESS")
